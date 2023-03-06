@@ -7,7 +7,7 @@ function resolve(dir) {
 
 module.exports = {
   productionSourceMap: false,
-  publicPath: './',
+  publicPath: '/MyChatGpt/',
   outputDir: 'dist',
   assetsDir: 'assets',
   lintOnSave: false,
