@@ -4,11 +4,11 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/MyChatGpt/app.ico"
   },
   {
-    "revision": "3998a3bc769fed5127d7",
+    "revision": "5c2ee668a60c8a4602b5",
     "url": "/MyChatGpt/assets/css/app.bd32eb98.css"
   },
   {
-    "revision": "8c7b0f322b7742b3c009",
+    "revision": "de2c0d7c4b548b409fee",
     "url": "/MyChatGpt/assets/css/chunk-vendors.c55ab3ce.css"
   },
   {
@@ -24,15 +24,15 @@ self.__precacheManifest = (self.__precacheManifest || []).concat([
     "url": "/MyChatGpt/assets/js/about.6cbc2603.js"
   },
   {
-    "revision": "3998a3bc769fed5127d7",
-    "url": "/MyChatGpt/assets/js/app.d632a7f9.js"
+    "revision": "5c2ee668a60c8a4602b5",
+    "url": "/MyChatGpt/assets/js/app.eef6f5b9.js"
   },
   {
-    "revision": "8c7b0f322b7742b3c009",
-    "url": "/MyChatGpt/assets/js/chunk-vendors.5dd12a01.js"
+    "revision": "de2c0d7c4b548b409fee",
+    "url": "/MyChatGpt/assets/js/chunk-vendors.c6f3acff.js"
   },
   {
-    "revision": "eb76a2f5ff6ceaa598a4763276326242",
+    "revision": "9dc2aa0912a85577e2e7d97bfd3abf94",
     "url": "/MyChatGpt/index.html"
   },
   {
