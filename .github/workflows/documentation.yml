@@ -9,7 +9,7 @@ jobs:
     steps:
       - uses: actions/setup-node@v3
         with:
-          node-version: '14'
+          node-version: '16'
       - name: Checkout 🛎️
         uses: actions/checkout@master # If you're using actions/checkout@v2 you must set persist-credentials to false in most cases for the deployment to work correctly.
         with:
