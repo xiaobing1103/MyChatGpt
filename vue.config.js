@@ -7,8 +7,7 @@ function resolve(dir) {
 
 module.exports = {
   productionSourceMap: false,
-  publicPath: process.env.NODE_ENV === 'production' ? '/MyChatGpt/' : '/',
-  assetsPublicPath:'./',
+  baseUrl : process.env.NODE_ENV === 'production' ? '/MyChatGpt/' : '/',
   outputDir: 'dist',
   lintOnSave: false,
   chainWebpack: (config) => {
