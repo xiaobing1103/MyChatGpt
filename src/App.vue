@@ -1,63 +1,10 @@
 <template>
   <div id="chatgpt">
-    <el-container>
-      <!-- class="sider-bar" -->
-      <!-- <el-aside>
-        <el-radio-group v-model="isCollapse" style="margin-bottom: 20px">
-          <el-radio-button :label="false">expand</el-radio-button>
-          <el-radio-button :label="true">collapse</el-radio-button>
-        </el-radio-group>
-        <el-menu
-          default-active="2"
-          class="el-menu-vertical-demo"
-          :collapse="isCollapse"
-          @open="handleOpen"
-          @close="handleClose"
-        >
-          <el-sub-menu index="1">
-            <template #title>
-              <el-icon><location /></el-icon>
-              <span>Navigator One</span>
-            </template>
-            <el-menu-item-group>
-              <template #title><span>Group One</span></template>
-              <el-menu-item index="1-1">item one</el-menu-item>
-              <el-menu-item index="1-2">item two</el-menu-item>
-            </el-menu-item-group>
-            <el-menu-item-group title="Group Two">
-              <el-menu-item index="1-3">item three</el-menu-item>
-            </el-menu-item-group>
-            <el-sub-menu index="1-4">
-              <template #title><span>item four</span></template>
-              <el-menu-item index="1-4-1">item one</el-menu-item>
-            </el-sub-menu>
-          </el-sub-menu>
-          <el-menu-item index="2">
-            <el-icon><icon-menu /></el-icon>
-            <template #title>Navigator Two</template>
-          </el-menu-item>
-          <el-menu-item index="3" disabled>
-            <el-icon><document /></el-icon>
-            <template #title>Navigator Three</template>
-          </el-menu-item>
-          <el-menu-item index="4">
-            <el-icon><setting /></el-icon>
-            <template #title>Navigator Four</template>
-          </el-menu-item>
-        </el-menu>
-      </el-aside> -->
-
+    <!-- <el-container>
       <el-container>
-        <el-header>
-          <el-row>
-            <el-col>
-              <div class="chatgpt-header grid-content bg-purple-dark">
-                二姨的chatgpt
-              </div></el-col
-            >
-          </el-row>
-        </el-header>
-
+          <div class="chatgpt-header grid-content bg-purple-dark">
+            二姨的chatgpt
+          </div>  
         <section class="main">
           <section class="view">
             <p class="view-text">chatgpt基于3.5模型</p>
@@ -97,7 +44,7 @@
               <div class="send-Button">
                 <el-input
                   v-model="message"
-                  :rows="textareaHeight"
+                  :rows="2"
                   placeholder="请输入内容"
                   type="textarea"
                 ></el-input>
@@ -148,7 +95,73 @@
           </section>
         </section>
       </el-container>
-    </el-container>
+    </el-container> -->
+    <div class="home">
+      <div class="c-sidebar"></div>
+      <div class="mask" style="display: none"></div>
+      <div class="main">
+        <div class="c-navbar">
+          <el-icon class="c-navbar-menu">
+            <Menu />
+          </el-icon>
+          <div class="title">ChatGPT</div>
+          <button class="reset" @click="resetMes()">清空会话</button>
+        </div>
+
+        <div class="c-chat">
+          <template v-if="clients[clientsIndex]">
+            <div
+              v-for="(item, index) in clients[clientsIndex].contents"
+              :key="index"
+            >
+              <div class="c-chat-box">
+                <div class="chat-box-label">
+                  <div class="name">
+                    <span v-if="item.role == 'user'" >admin</span>
+                    <span v-else>chatgpt</span>
+                  </div>
+                  <div class="time">{{item.time}}</div>
+                </div>
+                <div class="img">
+                  <img
+                    v-if="item.role == 'user'"
+                    class="head-img"
+                    src="https://chat.qccq.cc/assets/png/user-bbe4f78b.png"
+                    alt=""
+                  />
+                  <img
+                    v-else
+                    class="head-img"
+                    src="https://chat.qccq.cc/assets/png/chatgpt-92989ea8.png"
+                    alt=""
+                  />
+                </div>
+                <div class="content" v-html="marked.parse(item.content)"></div>
+              </div>
+            </div>
+          </template>
+        </div>
+
+        <div class="c-input">
+          <div class="box">
+            <textarea
+              class="input"
+              placeholder="请输入内容"
+              cols="10"
+              rows="2"
+              v-model="message"
+            ></textarea>
+            <img
+              @click="sendMes"
+              v-if="message"
+              class="send"
+              src="https://chat.qccq.cc/assets/svg/send-561b5857.svg"
+              alt="发送"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   <!-- <router-view /> -->
 </template>
@@ -164,22 +177,26 @@ import {
   Location,
   Setting,
 } from '@element-plus/icons-vue'
-
+import { ElMessage, ElMessageBox } from 'element-plus'
+import type { Action } from 'element-plus'
 const message = ref<string>('')
 // 消息框高度
-const textareaHeight = ref(2)
-const clientsIndex = ref(-1)
-const isCollapse = ref(true)
-const showChat = ref(true)
+const textareaHeight = ref<number>(2)
+const clientsIndex = ref<number>(-1)
+const isCollapse = ref<boolean>(true)
+const showChat = ref<boolean>(true)
+const time = ref<string>('')
 // 消息列表
 interface IMessage {
   role: 'user' | 'assistant'
   content: string
+  time?:string
 }
 // 回话列表
 interface IClient {
   name: string
   contents: Array<IMessage>
+  time?:string
 }
 const cacheClients = window.localStorage.getItem('message-data')
 
@@ -189,6 +206,7 @@ const clients: Array<IClient> = reactive(
 const hisrotryClients: Array<IClient> = reactive(
   cacheClients ? JSON.parse(cacheClients) : []
 )
+const apiKey = ref('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')
 console.log(hisrotryClients)
 /**
  * 发送消息
@@ -209,9 +227,24 @@ const sendMes = () => {
   clients[clientsIndex.value].contents.push({
     role: 'user',
     content: message.value,
+    time:new Date().getHours()+'：'+new Date().getMinutes()+'：'+new Date().getSeconds()
   })
   submit()
 }
+const resetMes =  ()=>{
+  ElMessageBox.alert('你确定要清楚所有聊天记录吗？', '清除聊天记录', {
+    // if you want to disable its autofocus
+    // autofocus: false,
+    confirmButtonText: 'OK',
+    callback: (action: Action) => {
+      
+      ElMessage({
+        type: 'info',
+        message: `action: ${action}`,
+      })
+    },
+  })
+} 
 async function submit() {
   const loading: any = ElLoading.service({
     lock: true,
@@ -231,7 +264,7 @@ async function submit() {
       },
       timeout: 60000,
       headers: {
-        Authorization: `Bearer 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`,
+        Authorization: `Bearer ${apiKey.value}`,
       },
     },
   })
@@ -268,6 +301,7 @@ async function submit() {
     clients[clientsIndex.value].contents.push({
       role: 'assistant',
       content: errContent ? errContent : res.data.choices[0].message.content,
+      time:new Date().getHours()+'：'+new Date().getMinutes()+'：'+new Date().getSeconds()
     })
     window.localStorage.setItem('message-data', JSON.stringify(clients))
   }
@@ -294,8 +328,284 @@ const changeproject = () => {
 }
 </script>
 <style lang="less">
+:root {
+  --white: #fff;
+  --black: #111;
+  --red: #e74c3c;
+  --orange: #e67e22;
+  --yellow: #f1c40f;
+  --green: #2ecc71;
+  --cyan: #1abc9c;
+  --blue: #3498db;
+  --purple: #9b59b6;
+  --pink: #fd79a8;
+  --white-10: rgba(255, 255, 255, 0.1);
+  --white-25: rgba(255, 255, 255, 0.25);
+  --white-50: rgba(255, 255, 255, 0.5);
+  --white-75: rgba(255, 255, 255, 0.75);
+  --black-25: rgba(0, 0, 0, 0.25);
+  --black-50: rgba(0, 0, 0, 0.5);
+  --black-75: rgba(0, 0, 0, 0.75);
+  --time-250: 0.25s;
+  --time-500: 0.5s;
+  --time-750: 0.75s;
+  --time-1000: 1s;
+  --theme-color-one: #434554;
+  --theme-color-two: #202125;
+  --theme-color-three: #8d8c9d;
+  --theme-color-four: #353541;
+}
+
 #chatgpt {
   // background-color: floralwhite;
+  position: relative;
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  .home {
+    position: relative;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    width: 100%;
+    height: 100%;
+    .main {
+      @media screen and (max-width: 736px) {
+        width: 100%;
+      }
+      position: relative;
+      -webkit-box-flex: 1;
+      -webkit-flex: 1;
+      -ms-flex: 1;
+      flex: 1;
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-orient: vertical;
+      -webkit-box-direction: normal;
+      -webkit-flex-direction: column;
+      -ms-flex-direction: column;
+      flex-direction: column;
+    }
+    .c-sidebar {
+      z-index: 3;
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      width: 15.625rem;
+      height: 100%;
+      padding: 0.625rem 0.625rem 2rem;
+      background-color: var(--theme-color-two);
+      -webkit-transition: all 0.25s;
+      transition: all 0.25s;
+      -webkit-box-orient: vertical;
+      -webkit-box-direction: normal;
+      -webkit-flex-direction: column;
+      -ms-flex-direction: column;
+      flex-direction: column;
+      @media screen and (max-width: 960px) {
+        position: absolute;
+        -webkit-transform: translateX(-100%);
+        -ms-transform: translateX(-100%);
+        transform: translate(-100%);
+      }
+    }
+    .mask {
+      position: absolute;
+      z-index: 2;
+      width: 100vw;
+      height: 100vh;
+      background-color: var(--black-50);
+    }
+    .c-navbar {
+      position: absolute;
+      top: 0;
+      z-index: 1;
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-pack: center;
+      -webkit-justify-content: center;
+      -ms-flex-pack: center;
+      justify-content: center;
+      -webkit-box-align: center;
+      -webkit-align-items: center;
+      -ms-flex-align: center;
+      align-items: center;
+      width: 100%;
+      height: 4.6875rem;
+      background-color: rgba(53, 53, 65, 0.75);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      .title {
+        color: var(--white);
+        font-size: 1.875rem;
+      }
+      .c-navbar-menu {
+        position: absolute;
+        left: 17px;
+        font-size: 1.56rem;
+        color: var(--white);
+      }
+      .reset {
+        border: none;
+        background-color: transparent;
+        cursor: pointer;
+        position: absolute;
+        right: 1rem;
+        font-size: 1rem;
+        color: var(--white);
+      }
+    }
+    .c-chat {
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      overflow-x: hidden;
+      overflow-y: auto;
+      padding: 7.5rem 0.625rem 1.25rem;
+      -webkit-box-orient: vertical;
+      -webkit-box-direction: normal;
+      -webkit-flex-direction: column;
+      -ms-flex-direction: column;
+      flex-direction: column;
+      -webkit-box-flex: 1;
+      -webkit-flex: 1;
+      -ms-flex: 1;
+      flex: 1;
+      background-color: var(--theme-color-one);
+      .c-chat-box {
+        position: relative;
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: end;
+        -webkit-align-items: flex-end;
+        -ms-flex-align: end;
+        align-items: flex-end;
+        max-width: 90%;
+        margin: 1.5rem 0;
+        -webkit-align-self: flex-start;
+        -ms-flex-item-align: start;
+        align-self: flex-start;
+        opacity: 1;
+        transform: translateX(0%);
+        transition: all 0.5s ease 0s;
+        .chat-box-label {
+          position: absolute;
+          top: 0;
+          display: -webkit-box;
+          display: -webkit-flex;
+          display: -ms-flexbox;
+          display: flex;
+          -webkit-box-align: end;
+          -webkit-align-items: flex-end;
+          -ms-flex-align: end;
+          align-items: flex-end;
+          -webkit-transform: translate(4.0625rem, calc(-100% - 0.3125rem));
+          -ms-transform: translate(4.0625rem, calc(-100% - 0.3125rem));
+          transform: translate(4.0625rem, calc(-100% - 0.3125rem));
+          .name {
+            margin-right: 0.625rem;
+            font-size: 1.25rem;
+            color: var(--white-25);
+          }
+          .time {
+            color: #888;
+            font-size: 1.05rem;
+          }
+        }
+        .img {
+          .head-img {
+            width: 3.125rem;
+            height: 3.125rem;
+            margin-right: 0.9375rem;
+            border-radius: 50%;
+          }
+        }
+        .content {
+          position: relative;
+          overflow: auto;
+          padding: 0.9375rem;
+          border-radius: 1.15rem;
+          font-size: 1.375rem;
+          background-color: var(--theme-color-four);
+          -webkit-box-flex: 1;
+          -webkit-flex: 1;
+          -ms-flex: 1;
+          flex: 1;
+          word-break: break-word;
+          color: var(--white-25);
+          p{
+            font-size: 1.2rem;
+          }
+          code{
+            font-size: 1rem;
+          }
+        }
+      }
+    }
+    .c-input {
+      background-color: var(--theme-color-three);
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: -ms-flexbox;
+      display: flex;
+      -webkit-box-pack: center;
+      -webkit-justify-content: center;
+      -ms-flex-pack: center;
+      justify-content: center;
+      -webkit-box-align: center;
+      -webkit-align-items: center;
+      -ms-flex-align: center;
+      align-items: center;
+      padding: 0.9375rem;
+      .box {
+        display: -webkit-box;
+        display: -webkit-flex;
+        display: -ms-flexbox;
+        display: flex;
+        -webkit-box-align: center;
+        -webkit-align-items: center;
+        -ms-flex-align: center;
+        align-items: center;
+        width: 100%;
+        min-height: 4.6875rem;
+        padding: 0.625rem 1.25rem;
+        border-radius: 0.4688rem;
+        -webkit-box-shadow: 0 0 0.625rem rgb(0 0 0 / 25%) inset;
+        box-shadow: 0 0 0.625rem rgb(0 0 0 / 25%) inset;
+        background-color: var(--theme-color-one);
+
+        .input {
+          height: 100%;
+          border: none;
+          outline: none;
+          font-size: 1.375rem;
+          font-family: \5fae\8f6f\96c5\9ed1;
+          background-color: transparent;
+          -webkit-box-flex: 1;
+          -webkit-flex: 1;
+          -ms-flex: 1;
+          flex: 1;
+          resize: none;
+        }
+        .send {
+          width: 1rem;
+          cursor: pointer;
+          margin-left: 1rem;
+          -webkit-transition: all 0.25s;
+          transition: all 0.25s;
+        }
+      }
+    }
+  }
 }
 .chatgpt-header {
   height: 50px;
@@ -445,18 +755,18 @@ body > .el-container {
 }
 /*里面的代码可以根据自己需求去进行更改*/
 /* 设置滚动条的样式 */
-::-webkit-scrollbar {
-  width: 12px;
-}
-/* 滚动槽 */
-::-webkit-scrollbar-track {
-  -webkit-box-shadow: inset006pxrgba(0, 0, 0, 0.3);
-  border-radius: 10px;
-}
-/* 滚动条滑块 */
-::-webkit-scrollbar-thumb {
-  border-radius: 10px;
-  background: rgba(0, 0, 0, 0.5);
-  -webkit-box-shadow: inset006pxrgba(0, 0, 0, 0.5);
-}
+// ::-webkit-scrollbar {
+//   width: 12px;
+// }
+// /* 滚动槽 */
+// ::-webkit-scrollbar-track {
+//   -webkit-box-shadow: inset006pxrgba(0, 0, 0, 0.3);
+//   border-radius: 10px;
+// }
+// /* 滚动条滑块 */
+// ::-webkit-scrollbar-thumb {
+//   border-radius: 10px;
+//   background: rgba(0, 0, 0, 0.5);
+//   -webkit-box-shadow: inset006pxrgba(0, 0, 0, 0.5);
+// }
 </style>
